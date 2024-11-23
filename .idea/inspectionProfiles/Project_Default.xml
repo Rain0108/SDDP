@@ -1,0 +1,8 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="AutoCloseableResource" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="METHOD_MATCHER_CONFIG" value="java.util.Formatter,format,java.io.Writer,append,com.google.common.base.Preconditions,checkNotNull,org.hibernate.Session,close,java.io.PrintWriter,printf,java.io.PrintStream,printf,Cplex_model,forwardPass_StageT_1|forwardPass_Stage2toT|forwardPass_Stage1,Model2,forwardPass_Stage1|forwardPass_Stage2toT|forwardPass_StageT_1,Model3,forwardPass_Stage2toT|forwardPass_StageT_1|forwardPass_Stage1|forwardPass_Stage1_IP|forwardPass_Stage2toT_IP|forwardPass_StageT_1_IP" />
+    </inspection_tool>
+  </profile>
+</component>
