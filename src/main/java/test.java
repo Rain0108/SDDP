@@ -4,8 +4,16 @@ import ilog.concert.IloNumVar;
 import ilog.concert.IloRange;
 import ilog.cplex.IloCplex;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
+
 public class test {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception{
+        FileOutputStream log = new FileOutputStream("logTest.log");
+        PrintStream ps = new PrintStream(log);
+        System.setOut(ps);
+
         for(int t=5-1;t>=2;t--){
             System.out.println(t);
         }
