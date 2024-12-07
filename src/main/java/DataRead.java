@@ -53,7 +53,9 @@ public class DataRead {
         return res;
     }
     public DataRead(String materialPath, String blockPath){
+        System.out.println("开始数据读取");
         rawMaterials = readMaterials(materialPath);
         blocks = readBlocks(blockPath);
+        System.out.println("完成数据读取");
     }
 }

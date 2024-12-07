@@ -370,7 +370,9 @@ public class Model3 {
     }
     public Solution forwardPass_Setup(int T, ArrayList<Integer> path) throws Exception{
         //首先求解第一阶段
+        System.out.println("开始建立第一阶段松弛模型");
         models[0][0] = forwardPass_Stage1();  //建立起第一阶段模型，对应models[0]
+        System.out.println("开始建立第一阶段整数模型");
         models_IP[0][0] = forwardPass_Stage1_IP();
         IloCplex cplex = models_IP[0][0];
         System.out.println("开始第一阶段求解");
@@ -455,6 +457,7 @@ public class Model3 {
             blockStockRanges[n][t][i] = cplex.addEq(c1, 0, "blockStock"+(n+1)+","+t+","+(i+1));
         }
         for(int i=0;i<rawMaterials.size();i++){
+            cplex.remove(materialProdRanges[n][t][i]);
             IloNumExpr c2 = cplex.diff(solution.Ic_value_IP[t>1?solution.path.get(t-2):0][i][t-1], Ic_it[n][i][t]);
             for(int j=0;j<allPatterns.get(i).size();j++){
                 c2 = cplex.diff(c2, Q_ijt[n][i][j][t]);
@@ -481,6 +484,7 @@ public class Model3 {
             blockStockRanges_IP[n][t][i] = cplex.addEq(c1, 0, "blockStock"+(n+1)+","+t+","+(i+1)+",IP");
         }
         for(int i=0;i<rawMaterials.size();i++){
+            cplex.remove(materialProdRanges_IP[n][t][i]);
             IloNumExpr c2 = cplex.diff(solution.Ic_value_IP[t>1?solution.path.get(t-2):0][i][t-1], Ic_it_IP[n][i][t]);
             for(int j=0;j<allPatterns.get(i).size();j++){
                 c2 = cplex.diff(c2, Q_ijt_IP[n][i][j][t]);
@@ -650,7 +654,6 @@ public class Model3 {
             cuts[n][T-1][iter-1] = cutRanges[n][T-1][iter-1].toString();
             if(cplex.solve()) System.out.println("T周期添加benders后"+cplex.getObjValue());
             System.out.println(cplex.getValue(F[n][T-1]));
-            System.out.println();
         }
 
         //开始为T-1周期及之前的周期生成cut
@@ -661,12 +664,12 @@ public class Model3 {
             double[][] cutDuals = new double[Parameters.nodeNumPerLayer][Parameters.maxIter];
             for (int i = 0; i < Parameters.nodeNumPerLayer; i++) {
                 if (!models[i][t - 1].solve()) throw new Exception("反向传播模型求解失败");
-                System.out.println(models[i][t - 1].getObjValue());
-                System.out.println(models[i][t-1].getValue(F[i][t-1]));
-                for(int j=0;j< blocks.size();j++){
-                    System.out.println(models[i][t-1].getValue(Ie_it[i][j][t-1]));
-                    System.out.println(models[i][t-1].getValue(B_it[i][j][t-1]));
-                }
+//                System.out.println(models[i][t-1].getObjValue());
+//                System.out.println(models[i][t-1].getValue(F[i][t-1]));
+//                for(int j=0;j< blocks.size();j++){
+//                    System.out.println(models[i][t-1].getValue(Ie_it[i][j][t-1]));
+//                    System.out.println(models[i][t-1].getValue(B_it[i][j][t-1]));
+//                }
                 stockDuals[i] = models[i][t - 1].getDuals(blockStockRanges[i][t - 1]);
                 prodDuals[i] = models[i][t - 1].getDuals(materialProdRanges[i][t - 1]);
                 demandDuals[i] = models[i][t - 1].getDuals(demandUBRanges[i][t - 1]);
@@ -753,7 +756,6 @@ public class Model3 {
                 cutRanges[n][t - 2][iter - 1] = cplex.addGe(cplex.diff(exp, rhs), 0, "benders_cut"+(n+1)+","+(t-1)+","+iter);
                 cutRanges_IP[n][t - 2][iter - 1] = cplex_IP.addGe(cplex_IP.diff(exp_IP, rhs_IP), 0, "benders_cut"+(n+1)+","+(t-1)+","+iter+",IP");
                 cuts[n][t-2][iter-1] = cutRanges[n][t-2][iter-1].toString();
-                System.out.println();
             }
         }
         //接下来向t=1传播
@@ -849,7 +851,6 @@ public class Model3 {
         cutRanges[0][0][iter - 1] = cplex.addGe(cplex.diff(exp, rhs), 0, "benders_cut"+"1,1"+","+iter);
         cutRanges_IP[0][0][iter - 1] = cplex_IP.addGe(cplex_IP.diff(exp_IP, rhs_IP), 0, "benders_cut"+"1,1"+","+iter+",IP");
         cuts[0][0][iter-1] = cutRanges[0][0][iter-1].toString();
-        System.out.println();
 
     }
     public Model3(ArrayList<Material> rawMaterials, ArrayList<Block> blocks, int T, ScenarioTree scenarioTree){
