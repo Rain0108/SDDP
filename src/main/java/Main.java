@@ -11,7 +11,7 @@ public class Main {
         FileOutputStream log = new FileOutputStream("demo.log");
         PrintStream ps = new PrintStream(log);
         System.setOut(ps);
-        DataRead dataRead = new DataRead(mPath1, bPath1);
+        DataRead dataRead = new DataRead(mPath, bPath);
         ScenarioTree scenarioTree = new ScenarioTree(dataRead.blocks);
         Model3 cplexModel = new Model3(dataRead.rawMaterials, dataRead.blocks, dataRead.T, scenarioTree);
         ArrayList<Integer> path =  scenarioTree.samplePath();
