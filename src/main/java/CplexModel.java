@@ -39,6 +39,7 @@ public class CplexModel {
     public IloCplex forwardPass_Stage1() throws Exception {
         //前向传播第一阶段模型建立
         IloCplex cplex = new IloCplex();
+        cplex.setParam(IloCplex.DoubleParam.TimeLimit, Parameters.timeLimit);
         //原料i的备货量
         for(int i=0;i<Y_i.length;i++){
             Y_i[i] = cplex.numVar(0, Double.MAX_VALUE, "Y"+(i+1));
@@ -102,6 +103,7 @@ public class CplexModel {
     public IloCplex forwardPass_Stage1_IP() throws Exception {
         //前向传播第一阶段整数模型建立
         IloCplex cplex = new IloCplex();
+        cplex.setParam(IloCplex.DoubleParam.TimeLimit, Parameters.timeLimit);
         //原料i的备货量
         for(int i=0;i<Y_i_IP.length;i++){
             Y_i_IP[i] = cplex.intVar(0, Integer.MAX_VALUE, "Y"+(i+1)+",IP");
@@ -164,6 +166,7 @@ public class CplexModel {
     }
     public IloCplex forwardPass_Stage2toT(int t, Solution solution, int curNode) throws Exception{
         IloCplex cplex = new IloCplex();
+        cplex.setParam(IloCplex.DoubleParam.TimeLimit, Parameters.timeLimit);
         //建立第t阶段模型
         for(int i=0;i<Ic_it[curNode].length;i++){
             Ic_it[curNode][i][t] = cplex.numVar(0, Double.MAX_VALUE, "Ic"+(curNode+1)+","+(i+1)+","+(t+1));
@@ -233,6 +236,7 @@ public class CplexModel {
     }
     public IloCplex forwardPass_Stage2toT_IP(int t, Solution solution, int curNode) throws Exception{
         IloCplex cplex = new IloCplex();
+        cplex.setParam(IloCplex.DoubleParam.TimeLimit, Parameters.timeLimit);
         //建立第t阶段模型
         for(int i=0;i<Ic_it_IP[curNode].length;i++){
             Ic_it_IP[curNode][i][t] = cplex.intVar(0, Integer.MAX_VALUE, "Ic"+(curNode+1)+","+(i+1)+","+(t+1)+",IP");
@@ -303,6 +307,7 @@ public class CplexModel {
     public IloCplex forwardPass_StageT_1(Solution solution, int curNode) throws Exception{
         //前向传播第（T+1）阶段
         IloCplex cplex = new IloCplex();
+        cplex.setParam(IloCplex.DoubleParam.TimeLimit, Parameters.timeLimit);
         //建立第T+1阶段模型
         for(int i=0;i<Ie_it[curNode].length;i++){
             Ie_it[curNode][i][T] = cplex.numVar(0, Double.MAX_VALUE, "Ie"+(curNode+1)+","+(i+1)+",T+1");
@@ -337,6 +342,7 @@ public class CplexModel {
     public IloCplex forwardPass_StageT_1_IP(Solution solution, int curNode) throws Exception{
         //前向传播第（T+1）阶段
         IloCplex cplex = new IloCplex();
+        cplex.setParam(IloCplex.DoubleParam.TimeLimit, Parameters.timeLimit);
         //建立第T+1阶段模型
         for(int i=0;i<Ie_it_IP[curNode].length;i++){
             Ie_it_IP[curNode][i][T] = cplex.intVar(0, Integer.MAX_VALUE, "Ie"+(curNode+1)+","+(i+1)+",T+1"+",IP");
@@ -529,9 +535,9 @@ public class CplexModel {
     public Solution forwardPass(int T, ArrayList<Integer> path) throws Exception{
         //首先求解第一阶段
         IloCplex cplex = models_IP[0][0];
-        System.out.println("开始第一阶段求解");
+        System.out.println("开始第1阶段求解");
         boolean isSolved = cplex.solve();
-        if(!isSolved) throw new Exception("第一阶段求解失败");
+        if(!isSolved) throw new Exception("第1阶段求解失败");
         Solution solution = new Solution(rawMaterials, blocks, allPatterns, T, path);
         solution.obj_value_IP[0][0] = cplex.getObjValue();
         solution.F_value_IP[0][0] = cplex.getValue(F_IP[0][0]);
@@ -546,7 +552,7 @@ public class CplexModel {
             solution.Ie_value_IP[0][i][0] = cplex.getValue(Ie_it_IP[0][i][0]);
             solution.B_value_IP[0][i][0] = cplex.getValue(B_it_IP[0][i][0]);
         }
-        System.out.println("完成第一阶段求解");
+        System.out.println("完成第1阶段求解");
         for(int t=1;t<T;t++){
             //这里求解出现在场景路径上的那一个
             for(int l=0;l<Parameters.nodeNumPerLayer;l++) {
@@ -591,14 +597,18 @@ public class CplexModel {
     }
     public void backwardPass(ArrayList<Integer> path, Solution solution, int iter) throws Exception {
         //反向传播
+        System.out.println("---------------------开始反向传播-------------------");
         ArrayList<Integer> worstDemand = scenarioTree.getWorstPath();
         //T+1周期向T周期模型添加约束
         double[][] duals = new double[Parameters.nodeNumPerLayer][];
         //首先获取路径上已求解的T+1周期模型对偶变量（仅包含成品库存约束）
         //duals[path.get(T-1)] = models[path.get(T-1)][T].getDuals(blockStockRanges[path.get(T-1)][T]);
         //建立T+1周期其他节点的模型，求解并获取对偶变量
+        ModelSolver solver = new ModelSolver(T, models);
+        solver.solve();
         for(int i=0;i<Parameters.nodeNumPerLayer;i++){
-            if(!models[i][T].solve()) throw new Exception("反向传播模型求解失败");
+            //if(!models[i][T].solve()) throw new Exception("反向传播模型求解失败");
+            //System.out.println(models[i][T].getStatus());
             duals[i] = models[i][T].getDuals(blockStockRanges[i][T]);
         }
         //向T周期所有节点模型添加约束
@@ -662,8 +672,10 @@ public class CplexModel {
             double[][] prodDuals = new double[Parameters.nodeNumPerLayer][];
             double[][] demandDuals = new double[Parameters.nodeNumPerLayer][];
             double[][] cutDuals = new double[Parameters.nodeNumPerLayer][Parameters.maxIter];
+            solver = new ModelSolver(t-1, models);
+            solver.solve();
             for (int i = 0; i < Parameters.nodeNumPerLayer; i++) {
-                if (!models[i][t - 1].solve()) throw new Exception("反向传播模型求解失败");
+                //if (!models[i][t - 1].solve()) throw new Exception("反向传播模型求解失败");
 //                System.out.println(models[i][t-1].getObjValue());
 //                System.out.println(models[i][t-1].getValue(F[i][t-1]));
 //                for(int j=0;j< blocks.size();j++){
@@ -763,9 +775,10 @@ public class CplexModel {
         double[][] prodDuals = new double[Parameters.nodeNumPerLayer][];
         double[][] demandDuals = new double[Parameters.nodeNumPerLayer][];
         double[][] cutDuals = new double[Parameters.nodeNumPerLayer][Parameters.maxIter];
+        solver = new ModelSolver(1, models);
+        solver.solve();
         for (int i = 0; i < Parameters.nodeNumPerLayer; i++) {
-            //models[i][T] = forwardPass_StageT_1(solution, i);
-            if (!models[i][1].solve()) throw new Exception("反向传播模型求解失败");
+            //if (!models[i][1].solve()) throw new Exception("反向传播模型求解失败");
             stockDuals[i] = models[i][1].getDuals(blockStockRanges[i][1]);
             prodDuals[i] = models[i][1].getDuals(materialProdRanges[i][1]);
             demandDuals[i] = models[i][1].getDuals(demandUBRanges[i][1]);
@@ -853,7 +866,7 @@ public class CplexModel {
         cuts[0][0][iter-1] = cutRanges[0][0][iter-1].toString();
 
     }
-    public CplexModel(ArrayList<Material> rawMaterials, ArrayList<Block> blocks, int T, ScenarioTree scenarioTree){
+    public CplexModel(ArrayList<Material> rawMaterials, ArrayList<Block> blocks, int T, ScenarioTree scenarioTree) throws IloException {
         this.T = T;
         this.rawMaterials = rawMaterials;
         this.blocks = blocks;
