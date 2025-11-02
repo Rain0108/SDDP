@@ -9,25 +9,56 @@ public class ScenarioTree {
     public ArrayList<Layer> tree;
     public ArrayList<Block> blocks;
     //生成场景路径（每个周期的需求）
-    public ArrayList<HashMap<Integer, Integer>> generate(ArrayList<HashMap<Integer, Integer>> demandMeanValue){
-        //每种成品需求均值固定，按正态分布生成
-        //demandMeanValue记录了每种成品的需求均值，返回值的键是周期，值是每种物品的需求量
+    public ArrayList<HashMap<Integer, Integer>> generateNormal(ArrayList<HashMap<Integer, Integer>> demandMeanValue){
+        // 正态采样，可通过 Parameters.demandStdFactor 调节波动强度
         ArrayList<HashMap<Integer, Integer>> res = new ArrayList<>();
         for(int i=0;i<demandMeanValue.size();i++){
             HashMap<Integer, Integer> map = new HashMap<>();
             for(Map.Entry<Integer, Integer> entry : demandMeanValue.get(i).entrySet()){
-                map.put(entry.getKey(), (int) (Math.sqrt((double) entry.getValue() /3)*random.nextGaussian()+entry.getValue()));
+                double mu = entry.getValue();
+                double sigma = Math.sqrt(Math.max(0.0, mu)) * Parameters.demandStdFactor;
+                int val = (int) Math.round(mu + sigma * random.nextGaussian());
+                map.put(entry.getKey(), Math.max(0, val));
             }
             res.add(map);
         }
         return res;
+    }
+
+    public ArrayList<HashMap<Integer, Integer>> generatePoisson(ArrayList<HashMap<Integer, Integer>> demandMeanValue){
+        // 泊松采样 (λ=均值)
+        ArrayList<HashMap<Integer, Integer>> res = new ArrayList<>();
+        for(int i=0;i<demandMeanValue.size();i++){
+            HashMap<Integer, Integer> map = new HashMap<>();
+            for(Map.Entry<Integer, Integer> entry : demandMeanValue.get(i).entrySet()){
+                int mu = Math.max(0, entry.getValue());
+                int val = poisson(mu);
+                map.put(entry.getKey(), val);
+            }
+            res.add(map);
+        }
+        return res;
+    }
+
+    private int poisson(double lambda){
+        if(lambda <= 0) return 0;
+        double L = Math.exp(-lambda);
+        int k = 0;
+        double p = 1.0;
+        do {
+            k++;
+            p *= random.nextDouble();
+        } while (p > L);
+        return k - 1;
     }
     public void buildTree(int nodeNumPerLayer, int T, ArrayList<HashMap<Integer, Integer>> demandMeanValue){
         //建立场景树
         tree = new ArrayList<>();
         for(int t=0;t<T;t++) tree.add(new Layer(t, new ArrayList<>()));
         for(int i=0;i<nodeNumPerLayer;i++){
-            ArrayList<HashMap<Integer, Integer>> curPath = generate(demandMeanValue);
+            ArrayList<HashMap<Integer, Integer>> curPath = Parameters.demandSampling.equals("poisson")
+                    ? generatePoisson(demandMeanValue)
+                    : generateNormal(demandMeanValue);
             for(int t=0;t<T;t++){
                 tree.get(t).getCurLayer().add(curPath.get(t));
             }

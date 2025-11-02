@@ -40,6 +40,7 @@ public class CplexModel {
         //前向传播第一阶段模型建立
         IloCplex cplex = new IloCplex();
         cplex.setParam(IloCplex.DoubleParam.TimeLimit, Parameters.timeLimit);
+        cplex.setParam(IloCplex.Param.MIP.Tolerances.MIPGap, 0.01);
         //原料i的备货量
         for(int i=0;i<Y_i.length;i++){
             Y_i[i] = cplex.numVar(0, Double.MAX_VALUE, "Y"+(i+1));
@@ -104,6 +105,7 @@ public class CplexModel {
         //前向传播第一阶段整数模型建立
         IloCplex cplex = new IloCplex();
         cplex.setParam(IloCplex.DoubleParam.TimeLimit, Parameters.timeLimit);
+        cplex.setParam(IloCplex.Param.MIP.Tolerances.MIPGap, 0.01);
         //原料i的备货量
         for(int i=0;i<Y_i_IP.length;i++){
             Y_i_IP[i] = cplex.intVar(0, Integer.MAX_VALUE, "Y"+(i+1)+",IP");
@@ -167,6 +169,7 @@ public class CplexModel {
     public IloCplex forwardPass_Stage2toT(int t, Solution solution, int curNode) throws Exception{
         IloCplex cplex = new IloCplex();
         cplex.setParam(IloCplex.DoubleParam.TimeLimit, Parameters.timeLimit);
+        cplex.setParam(IloCplex.Param.MIP.Tolerances.MIPGap, 0.01);
         //建立第t阶段模型
         for(int i=0;i<Ic_it[curNode].length;i++){
             Ic_it[curNode][i][t] = cplex.numVar(0, Double.MAX_VALUE, "Ic"+(curNode+1)+","+(i+1)+","+(t+1));
@@ -237,6 +240,7 @@ public class CplexModel {
     public IloCplex forwardPass_Stage2toT_IP(int t, Solution solution, int curNode) throws Exception{
         IloCplex cplex = new IloCplex();
         cplex.setParam(IloCplex.DoubleParam.TimeLimit, Parameters.timeLimit);
+        cplex.setParam(IloCplex.Param.MIP.Tolerances.MIPGap, 0.01);
         //建立第t阶段模型
         for(int i=0;i<Ic_it_IP[curNode].length;i++){
             Ic_it_IP[curNode][i][t] = cplex.intVar(0, Integer.MAX_VALUE, "Ic"+(curNode+1)+","+(i+1)+","+(t+1)+",IP");
@@ -308,6 +312,7 @@ public class CplexModel {
         //前向传播第（T+1）阶段
         IloCplex cplex = new IloCplex();
         cplex.setParam(IloCplex.DoubleParam.TimeLimit, Parameters.timeLimit);
+        cplex.setParam(IloCplex.Param.MIP.Tolerances.MIPGap, 0.01);
         //建立第T+1阶段模型
         for(int i=0;i<Ie_it[curNode].length;i++){
             Ie_it[curNode][i][T] = cplex.numVar(0, Double.MAX_VALUE, "Ie"+(curNode+1)+","+(i+1)+",T+1");
@@ -343,6 +348,7 @@ public class CplexModel {
         //前向传播第（T+1）阶段
         IloCplex cplex = new IloCplex();
         cplex.setParam(IloCplex.DoubleParam.TimeLimit, Parameters.timeLimit);
+        cplex.setParam(IloCplex.Param.MIP.Tolerances.MIPGap, 0.01);
         //建立第T+1阶段模型
         for(int i=0;i<Ie_it_IP[curNode].length;i++){
             Ie_it_IP[curNode][i][T] = cplex.intVar(0, Integer.MAX_VALUE, "Ie"+(curNode+1)+","+(i+1)+",T+1"+",IP");
@@ -866,7 +872,7 @@ public class CplexModel {
         cuts[0][0][iter-1] = cutRanges[0][0][iter-1].toString();
 
     }
-    public CplexModel(ArrayList<Material> rawMaterials, ArrayList<Block> blocks, int T, ScenarioTree scenarioTree) throws IloException {
+    public  CplexModel(ArrayList<Material> rawMaterials, ArrayList<Block> blocks, int T, ScenarioTree scenarioTree) throws IloException {
         this.T = T;
         this.rawMaterials = rawMaterials;
         this.blocks = blocks;

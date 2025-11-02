@@ -1,9 +1,9 @@
 public class Material{
     //原材料
-    private final String type;
-    private final int length;
-    private final double cost;
-    private final double hold_cost;
+    public final String type;
+    public final int length;
+    public final double cost;
+    public final double hold_cost;
 
     public Material(String type, int length, double cost, double hold_cost){
         this.type = type;

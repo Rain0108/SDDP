@@ -21,6 +21,13 @@
       <version>3.8.1</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>or.cplex</groupId>
+      <artifactId>cplex-12.10</artifactId>
+      <version>12.10</version>
+      <scope>system</scope>
+      <systemPath>C:/Program Files/IBM/ILOG/CPLEX_Studio1210/cplex/lib/cplex.jar</systemPath>
+    </dependency>
   </dependencies>
   <build>
     <plugins>

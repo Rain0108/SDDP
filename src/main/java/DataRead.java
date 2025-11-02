@@ -58,4 +58,23 @@ public class DataRead {
         blocks = readBlocks(blockPath);
         System.out.println("完成数据读取");
     }
+    
+    // 复制构造函数
+    public DataRead(DataRead original) {
+        this.T = original.T;
+        this.rawMaterials = new ArrayList<>();
+        this.blocks = new ArrayList<>();
+        
+        // 深拷贝原材料
+        for (Material material : original.rawMaterials) {
+            this.rawMaterials.add(new Material(material.getType(), material.getLength(), 
+                                             material.getCost(), material.getHold_cost()));
+        }
+        
+        // 深拷贝产品块
+        for (Block block : original.blocks) {
+            this.blocks.add(new Block(block.getType(), block.getLength(), block.getHold_cost(), 
+                                    block.getBack_cost(), new ArrayList<>(block.getDemandAverage())));
+        }
+    }
 }
